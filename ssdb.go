@@ -42,26 +42,26 @@ func (c *Client) Do(args ...interface{}) ([]string, error) {
 }
 
 // Key-Value
-func (c *Client) Set(key, val string) (res bool, err error) {
+func (c *Client) Set(key, val string) (success bool, err error) {
 	resp, err := c.Do("set", key, val)
 	if err != nil {
 		return
 	}
 	if len(resp) == 2 && resp[0] == "ok" {
-		res = true
+		success = true
 		return
 	}
 	err = ErrBadResponse
 	return
 }
 
-func (c *Client) Setx(key, val string, expires int) (res bool, err error) {
+func (c *Client) Setx(key, val string, expires int) (success bool, err error) {
 	resp, err := c.Do("setx", key, val, expires)
 	if err != nil {
 		return
 	}
 	if len(resp) == 2 && resp[0] == "ok" {
-		res = true
+		success = true
 		return
 	}
 	err = ErrBadResponse
@@ -106,15 +106,17 @@ func (c *Client) GetSet(key, val string) (last interface{}, err error) {
 	return
 }
 
-func (c *Client) Del(key string) (interface{}, error) {
+func (c *Client) Del(key string) (success bool, err error) {
 	resp, err := c.Do("del", key)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if len(resp) == 2 && resp[0] == "ok" {
-		return true, nil
+		success = true
+		return
 	}
-	return nil, ErrBadResponse
+	err = ErrBadResponse
+	return
 }
 
 func (c *Client) Incr(key string, num int) (res int, err error) {
@@ -141,7 +143,7 @@ func (c *Client) Decr(key string, num int) (res int, err error) {
 	return
 }
 
-func (c *Client) MultiSet(kvPair map[string]string) (success interface{}, err error) {
+func (c *Client) MultiSet(kvPair map[string]string) (success bool, err error) {
 	args := []interface{}{"multi_set"}
 	for k, v := range kvPair {
 		args = append(args, k, v)
@@ -181,7 +183,7 @@ func (c *Client) MultiGet(keys ...string) (kvPair map[string]string, err error) 
 	return
 }
 
-func (c *Client) MultiDel(keys ...string) (success interface{}, err error) {
+func (c *Client) MultiDel(keys ...string) (success bool, err error) {
 	args := []interface{}{"multi_del"}
 	for _, k := range keys {
 		args = append(args, k)
@@ -191,7 +193,8 @@ func (c *Client) MultiDel(keys ...string) (success interface{}, err error) {
 		return
 	}
 	if len(resp) == 2 && resp[0] == "ok" {
-		return strconv.Atoi(resp[1])
+		success = true
+		return
 	}
 	err = ErrBadResponse
 	return
@@ -215,7 +218,7 @@ func (c *Client) Scan(startKey string, endKey string, limit int) (kvList [][2]st
 }
 
 //Key-Map
-func (c *Client) HSet(key, field, val string) (success interface{}, err error) {
+func (c *Client) HSet(key, field, val string) (success bool, err error) {
 	resp, err := c.Do("hset", key, field, val)
 	if err != nil {
 		return
